@@ -10,7 +10,9 @@ requires-python = ">=3.13"
 dependencies = [
     "fastapi (>=0.126.0,<0.127.0)",
     "pydantic (>=2.12.5,<3.0.0)",
-    "uvicorn (>=0.38.0,<0.39.0)"
+    "uvicorn (>=0.38.0,<0.39.0)",
+    "rdflib (>=7.5.0,<8.0.0)",
+    "pytest (>=9.0.2,<10.0.0)"
 ]
 
 
@@ -19,4 +21,14 @@ requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-start = "uvicorn src/api:app --reload"
+dev = "api:run"
+start = "api:run"
+
+[tool.poetry]
+packages = [
+    { include = "api", from = "src" }
+]
+[dependency-groups]
+dev = [
+    "pytest (>=9.0.2,<10.0.0)"
+]

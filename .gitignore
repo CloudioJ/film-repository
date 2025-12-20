@@ -1,3 +1,7 @@
 __pycache__
 .venv
 .env
+_test.py
+tests
+
+.pytest_cache
