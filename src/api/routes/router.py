@@ -8,5 +8,5 @@ sparql = SparQL("ontologies/movies-ontology-master/ontology.rdf")
 @router.get("/busca")
 async def busca(req: QueryRequest):
     print(f"Dados recebidos: {req}")
-    result = sparql.query(req.ator, req.titulo, req.ano)
+    result = sparql.query(req.ator, req.titulo, req.diretor)
     return { "result": result }

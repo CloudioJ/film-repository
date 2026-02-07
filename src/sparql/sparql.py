@@ -12,8 +12,6 @@ class SparQL:
             "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n"
         )
 
-
-
     def query_by_actor(self, actor: str = ""):
 
         print("[INFO] Procurando por ator")
@@ -51,9 +49,9 @@ class SparQL:
             return self.query_by_actor(actor)
         
         if title:
-            return self.query_by_actor(title)
+            return self.query_by_movie(title)
         
         if director:
-            return self.query_by_actor(director)
+            return self.query_by_director(director)
         
         return []
