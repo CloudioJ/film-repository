@@ -1,6 +1,10 @@
 from pydantic import BaseModel
 
-class QueryRequest(BaseModel):
+class ActorRequest(BaseModel):
     ator: str
+
+class MovieRequest(BaseModel):
     titulo: str
+
+class DirectorRequest(BaseModel):
     diretor: str

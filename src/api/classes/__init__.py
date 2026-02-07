@@ -1,3 +1,2 @@
-from .query_payload import QueryRequest
+from .query_payload import MovieRequest, ActorRequest, DirectorRequest
 
-__all__ = ["QueryRequest"]
