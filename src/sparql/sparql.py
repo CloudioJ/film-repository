@@ -76,4 +76,37 @@ class SparQL:
         return results
     
     def query_by_director(self, director: str = ""):
-        return
+
+        print("[INFO] Procurando por filmes do diretor")
+
+        sparql_query = self.prefix + (
+            "SELECT DISTINCT ?Movies "
+            "(GROUP_CONCAT(DISTINCT ?actor; separator=', ') AS ?actors)\n"
+            "WHERE {\n"
+            "  ?dir rdfs:label ?dirName .\n"
+            f"  FILTER(CONTAINS(LCASE(STR(?dirName)), LCASE('{director}')))\n"
+            "  ?dir foaf:made ?mov .\n"
+            "  ?mov rdfs:label ?Movies .\n"
+            "  OPTIONAL {\n"
+            "    ?act foaf:acts ?mov .\n"
+            "    ?act rdfs:label ?actor .\n"
+            "  }\n"
+            "}\n"
+            "GROUP BY ?Movies\n"
+        )
+
+        query_return = self.g.query(sparql_query)
+
+        results = []
+        for row in query_return:
+            print(row)
+
+            actors_str = str(row.actors) if getattr(row, 'actors', None) else ""
+            actors_list = [a.strip() for a in actors_str.split(',')] if actors_str else []
+
+            results.append({
+                "movie": str(row.Movies),
+                "actors": actors_list
+            })
+
+        return results
