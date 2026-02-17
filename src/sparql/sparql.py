@@ -24,7 +24,7 @@ class SparQL:
             '?mov foaf:launchDate ?launchDate .\n'
             'OPTIONAL { ?dir foaf:made ?mov . ?dir rdfs:label ?director . }\n'
             "}\n"
-            "GROUP BY ?Movies ?launchDate\n"  # Add this line!
+            "GROUP BY ?Movies ?launchDate\n"
         )
 
         query_return = self.g.query(sparql_query)
