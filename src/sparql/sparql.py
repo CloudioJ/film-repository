@@ -13,71 +13,70 @@ class SparQL:
         )
 
     def query_by_actor(self, actor: str = ""):
-        print("[INFO] Procurando por ator")
+        print(f"[INFO] Procurando por ator: {actor}")
 
         sparql_query = self.prefix + (
-            "SELECT DISTINCT ?Movies ?launchDate (GROUP_CONCAT(DISTINCT ?director; separator=', ') AS ?directors)\n"
+            "SELECT DISTINCT ?Movies ?launchDate\n"
             "WHERE {\n"
-            f'?actor rdfs:label "{actor}" .\n'
-            '?actor foaf:acts ?mov .\n'
-            '?mov rdfs:label ?Movies .\n'
-            '?mov foaf:launchDate ?launchDate .\n'
-            'OPTIONAL { ?dir foaf:made ?mov . ?dir rdfs:label ?director . }\n'
+            f'  ?actor rdfs:label "{actor}" .\n'
+            "  ?actor foaf:acts ?mov .\n"
+            "  ?mov rdfs:label ?Movies .\n"
+            "  ?mov foaf:launchDate ?launchDate .\n"
             "}\n"
-            "GROUP BY ?Movies ?launchDate\n"
+            "GROUP BY ?Movies ?launchDate"
         )
 
         query_return = self.g.query(sparql_query)
         results = []
 
         for row in query_return:
-            print(row)
-            directors_str = str(row.directors) if getattr(row, 'directors', None) is not None else ""
-            directors_list = [a.strip() for a in directors_str.split(',')] if directors_str else []
+            movie_title = getattr(row, 'Movies', None)
+            launch_date = getattr(row, 'launchDate', None)
+
             results.append({
-                "movie_title": str(row.Movies) if getattr(row, 'Movies', None) is not None else None,
-                "launch_date": str(row.launchDate) if getattr(row, 'launchDate', None) is not None else None,
-                "director": directors_list
+                "movie_title": str(movie_title) if movie_title else None,
+                "launch_date": str(launch_date) if launch_date else None,
             })
-            
+
         return results
-    
+
     def query_by_movie(self, movie: str = ""):
-        
-        print("[INFO] Procurando por filme")
+        print(f"[INFO] Procurando por filme: {movie}")
+
         sparql_query = self.prefix + (
-            "SELECT DISTINCT ?Movies (GROUP_CONCAT(DISTINCT ?actor; separator=', ') AS ?actors) (GROUP_CONCAT(DISTINCT ?director; separator=', ') AS ?directors)\n"
+            "SELECT DISTINCT ?Movies "
+            "(GROUP_CONCAT(DISTINCT ?actor; separator=', ') AS ?actors) "
+            "(GROUP_CONCAT(DISTINCT ?director; separator=', ') AS ?directors)\n"
             "WHERE {\n"
-            f'?mov rdfs:label "{movie}" .\n'
-            '?mov rdfs:label ?Movies .\n'
-            'OPTIONAL { ?act foaf:acts ?mov . ?act rdfs:label ?actor . }\n'
-            'OPTIONAL { ?dir foaf:made ?mov . ?dir rdfs:label ?director . }\n'
+            "  ?mov rdfs:label ?movieName .\n"
+            f"  FILTER(CONTAINS(LCASE(STR(?movieName)), LCASE('{movie}')))\n"
+            "  OPTIONAL { ?act foaf:acts ?mov . ?act rdfs:label ?actor . }\n"
+            "  OPTIONAL { ?dir foaf:made ?mov . ?dir rdfs:label ?director . }\n"
+            "  BIND(?movieName AS ?Movies)\n"
             "}\n"
             "GROUP BY ?Movies\n"
         )
+
         query_return = self.g.query(sparql_query)
-        
         results = []
+
         for row in query_return:
-            print(row)
-            
-            actors_str = str(row.actors) if getattr(row, 'actors', None) is not None else ""
+            actors_str = str(row.actors) if getattr(row, 'actors', None) else ""
             actors_list = [a.strip() for a in actors_str.split(',')] if actors_str else []
-            
-            directors_str = str(row.directors) if getattr(row, 'directors', None) is not None else ""
+
+            directors_str = str(row.directors) if getattr(row, 'directors', None) else ""
             directors_list = [a.strip() for a in directors_str.split(',')] if directors_str else []
 
             results.append({
-                "movie": str(row.Movies) if getattr(row, 'Movies', None) is not None else None,
+                "movie": str(row.Movies),
                 "actors": actors_list,
                 "director": directors_list
             })
 
         return results
-    
-    def query_by_director(self, director: str = ""):
 
-        print("[INFO] Procurando por filmes do diretor")
+    def query_by_director(self, director: str = ""):
+        print(f"[INFO] Procurando por filmes do diretor: {director}")
 
         sparql_query = self.prefix + (
             "SELECT DISTINCT ?Movies "
@@ -87,20 +86,15 @@ class SparQL:
             f"  FILTER(CONTAINS(LCASE(STR(?dirName)), LCASE('{director}')))\n"
             "  ?dir foaf:made ?mov .\n"
             "  ?mov rdfs:label ?Movies .\n"
-            "  OPTIONAL {\n"
-            "    ?act foaf:acts ?mov .\n"
-            "    ?act rdfs:label ?actor .\n"
-            "  }\n"
+            "  OPTIONAL { ?act foaf:acts ?mov . ?act rdfs:label ?actor . }\n"
             "}\n"
             "GROUP BY ?Movies\n"
         )
 
         query_return = self.g.query(sparql_query)
-
         results = []
-        for row in query_return:
-            print(row)
 
+        for row in query_return:
             actors_str = str(row.actors) if getattr(row, 'actors', None) else ""
             actors_list = [a.strip() for a in actors_str.split(',')] if actors_str else []
 
