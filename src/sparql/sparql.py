@@ -1,18 +1,18 @@
 from rdflib import Graph
-from rdflib.namespace import RDF
-from src.utils import build_parameters
+from services.tmdb import TMDb
 
 class SparQL:
     def __init__(self, ontology_path: str):
         self.g = Graph()
         self.g.parse(ontology_path)
+        self.tmdb = TMDb()
         self.prefix = (
             "PREFIX foaf: <http://www.ime.usp.br/~renata/FOAF-modified>\n"
             "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n"
             "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n"
         )
 
-    def query_by_actor(self, actor: str = ""):
+    def query_by_actor(self, actor: str = "") -> list[dict]:
         print(f"[INFO] Procurando por ator: {actor}")
 
         sparql_query = self.prefix + (
@@ -25,22 +25,23 @@ class SparQL:
             "}\n"
             "GROUP BY ?Movies ?launchDate"
         )
-
         query_return = self.g.query(sparql_query)
         results = []
-
+        
         for row in query_return:
             movie_title = getattr(row, 'Movies', None)
             launch_date = getattr(row, 'launchDate', None)
 
+            poster_path = self.tmdb.get_poster(movie_title, launch_date)
             results.append({
                 "movie_title": str(movie_title) if movie_title else None,
                 "launch_date": str(launch_date) if launch_date else None,
+                "poster": poster_path
             })
 
         return results
 
-    def query_by_movie(self, movie: str = ""):
+    def query_by_movie(self, movie: str = "") -> dict:
         print(f"[INFO] Procurando por filme: {movie}")
 
         sparql_query = self.prefix + (
@@ -58,6 +59,9 @@ class SparQL:
         )
 
         query_return = self.g.query(sparql_query)
+
+        poster_path = self.tmdb.get_poster(movie)
+
         results = []
 
         for row in query_return:
@@ -69,13 +73,14 @@ class SparQL:
 
             results.append({
                 "movie": str(row.Movies),
+                "poster": poster_path,
                 "actors": actors_list,
                 "director": directors_list
             })
 
         return results
 
-    def query_by_director(self, director: str = ""):
+    def query_by_director(self, director: str = "") -> list[dict]:
         print(f"[INFO] Procurando por filmes do diretor: {director}")
 
         sparql_query = self.prefix + (
