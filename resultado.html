@@ -7,123 +7,323 @@
 <style>
   body {
     font-family: 'Poppins', sans-serif;
-    background-color: #e5e7eb;
+    margin: 0;
+    height: 100vh;
+    background: 
+      linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)),
+      url("teste2.png") center/cover no-repeat;
     display: flex;
     justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
+    align-items: flex-start; 
+    color: white;
+    padding-top: 50px; 
+    overflow: hidden; 
   }
 
-    .container {
-        width: 500px;
-        height: 440px;
-        background-image: url("teste1.png");
-        background-size: 100% 100%;
-        background-repeat: no-repeat;
-        padding: 10px 10px 5px 10px;
-        position: relative;
-        box-sizing: border-box;
+  .container {
+    width: 90%;
+    max-width: 700px;
+    margin: 50px auto; 
+    padding: 20px;
+    box-sizing: border-box;
+    background-color: rgba(0,0,0,0.3);
+    border-radius: 8px;
+    max-height: 80vh;  
+    overflow-y: auto; 
+    overflow-x: hidden;
+  }
 
-        display: flex;
-        flex-direction: column;
-    }
+  .search-info {
+    font-size: 18px;
+    margin-bottom: 30px;
+    text-align: center;
+    font-weight: 600;
+    text-shadow: 2px 2px 6px rgba(0,0,0,0.7);
+  }
 
-    #resultado {
-        color: black;
-        font-size: 16px;
-        line-height: 1.5;
-        white-space: pre-wrap;
-        text-align: left;
+  /* Estilo para a foto do Ator/Diretor no topo */
+  #profile-header {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
 
-        max-height: 260px;     
-        overflow-y: auto;     
-        margin-top: 90px;      
-        margin-bottom: 70px;     
-        padding: 0 5px;    
-    }
+  #profile-header img {
+    width: 200px;
+    height: 300px;
+    object-fit: cover;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    border: 3px solid rgba(255,255,255,0.2);
+  }
 
-    #resultado::-webkit-scrollbar {
-        width: 6px;
-    }
-    #resultado::-webkit-scrollbar-thumb {
-        background-color: rgba(0,0,0,0.4);
-        border-radius: 3px;
-    }
+  #profile-header h2 {
+    margin-top: 15px;
+    text-transform: capitalize;
+    color: #fff;
+    text-shadow: 1px 1px 4px rgba(0,0,0,0.8);
+  }
 
+  .movie-grid {
+    display: flex;
+    flex-direction: column; 
+    gap: 20px;
+    width: 100%;
+  }
+
+  .movie-card {
+    width: 100%; 
+    display: flex; 
+    align-items: flex-start; 
+    gap: 20px; 
+    background-color: rgba(255, 255, 255, 0.05); 
+    padding: 15px;
+    border-radius: 8px;
+    transition: background-color 0.3s;
+  }
+
+  .movie-card:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .movie-card img {
+    width: 150px; 
+    min-width: 150px;
+    height: auto;
+    border-radius: 8px;
+    object-fit: cover;
+    cursor: pointer; 
+    transition: transform 0.2s;
+  }
+
+  .movie-card img:hover {
+    transform: scale(1.02);
+  }
+
+  .movie-card-info {
+    text-align: left;
+    margin-top: 0;
+    flex: 1; 
+    min-width: 0; 
+    word-wrap: break-word; 
+  }
+
+  .movie-card-info h3 {
+    cursor: pointer; 
+    display: inline-block;
+    margin-top: 0;
+  }
+  
+  .movie-card-info h3:hover {
+    text-decoration: underline;
+    color: #ffcc00;
+  }
+
+  /* Mudei aqui: removi o 'display: block' genérico dos spans para não quebrar linha */
+  .movie-card-info p {
+    display: block; /* O parágrafo é bloco */
+    margin-bottom: 8px; 
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.6;
+    margin-top: 5px;
+  }
+
+  /* CSS DO NOME CLICÁVEL CORRIGIDO */
+  .link-clicavel {
+    display: inline; /* <--- O SEGREDO: garante que fiquem na mesma linha */
+    cursor: pointer;
+    text-decoration: none; /* Tirei o sublinhado padrão para ficar mais limpo */
+    color: #e0e0e0;
+    transition: color 0.2s;
+    border-bottom: 1px dotted rgba(255,255,255,0.3); /* Um sublinhado sutil */
+  }
+  
+  .link-clicavel:hover {
+    color: #ffcc00;
+    border-bottom: 1px solid #ffcc00;
+  }
+
+  #resultado {
+    font-size: 16px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    text-align: left;
+    color: white;
+  }
 </style>
 </head>
 <body>
 
-  <div class="container" role="main">
-    <div id="resultado">Carregando...</div>
-  </div>
+  <div class="container">
+        <div class="search-info">
+            <strong>Busca por:</strong> <span id="tipoBusca"></span><br>
+            <strong>Pesquisando:</strong> <span id="valorBusca"></span>
+        </div>
+
+        <div class="movie-grid" id="movieGrid">
+        </div>
+    </div>
 
 <script>
-const params = new URLSearchParams(window.location.search);
-const tipo = params.get("tipo");
-const valor = params.get("valor");
-const resultadoDiv = document.getElementById("resultado");
+    const params = new URLSearchParams(window.location.search);
+    const tipo = params.get("tipo");
+    const valor = params.get("valor");
+    const tipoBusca = document.getElementById("tipoBusca");
+    const valorBusca = document.getElementById("valorBusca");
+    const movieGrid = document.getElementById("movieGrid");
 
-async function buscar() {
-    let url = "";
-    let bodyData = {};
+    tipoBusca.textContent = tipo;
+    valorBusca.textContent = valor;
 
-    if (tipo === "ator") {
-        url = "http://127.0.0.1:8000/actor_search";
-        bodyData = { ator: valor };
-    } else if (tipo === "filme") {
-        url = "http://127.0.0.1:8000/movie_search";
-        bodyData = { titulo: valor };
-    } else if (tipo === "diretor") {
-        url = "http://127.0.0.1:8000/director_search";
-        bodyData = { diretor: valor };
-    } else {
-        resultadoDiv.innerHTML = "Tipo de busca não suportado.";
-        return;
+    function irParaFilme(titulo) {
+        if (titulo) {
+            window.location.href = `?tipo=filme&valor=${encodeURIComponent(titulo)}`;
+        }
     }
 
-    try {
-        const response = await fetch(url, { 
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(bodyData)
-        });
+    async function buscar() {
+        let url = "";
+        let bodyData = {};
 
-        const data = await response.json();
-        let html = `<strong>Busca por:</strong> ${tipo} <br><br>`;
+        movieGrid.innerHTML = "";
+        const oldProfile = document.getElementById("profile-header");
+        if (oldProfile) oldProfile.remove();
 
         if (tipo === "ator") {
-            if (data.result && data.result.length > 0) {
-                const filmes = data.result.map(item => item.movie_title).filter(Boolean); 
-                html += `<strong>Nome do Ator:</strong> ${valor}<br><br>`;
-                html += `<strong>Filmes:</strong> ${filmes.join(', ')}`;
-            } else {
-                html += "Nenhum resultado encontrado.";
-            }
+            url = "http://127.0.0.1:8000/actor_search";
+            bodyData = { ator: valor };
+        } else if (tipo === "filme") {
+            url = "http://127.0.0.1:8000/movie_search";
+            bodyData = { titulo: valor };
+        } else if (tipo === "diretor") {
+            url = "http://127.0.0.1:8000/director_search";
+            bodyData = { diretor: valor };
         } else {
-            if (data.result && data.result.length > 0) {
-                data.result.forEach(item => {
-                    html += `<div style="margin-bottom:10px;">`;
-                    if (item.movie) html += `<strong>Filme:</strong> ${item.movie}<br>`;
-                    if (item.movie_title) html += `<strong>Filme:</strong> ${item.movie_title}<br>`;
-                    if (item.actors && item.actors.length > 0) html += `<strong>Atores:</strong> ${item.actors.join(', ')}<br>`;
-                    if (item.director && item.director.length > 0) html += `<strong>Diretor:</strong> ${item.director.join(', ')}<br>`;
-                    html += `</div>`;
+            alert("Tipo de busca não suportado.");
+            return;
+        }
+
+        try {
+            const response = await fetch(url, { 
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(bodyData)
+            });
+
+            const data = await response.json();
+
+            let listaFilmes = [];
+            let imagemPessoa = null;
+
+            if (data.result) {
+                if (data.result.movies) {
+                    listaFilmes = data.result.movies;
+                    imagemPessoa = data.result.person_image;
+                } else if (Array.isArray(data.result)) {
+                    listaFilmes = data.result;
+                }
+            }
+
+            if (tipo === "ator" || tipo === "diretor") {
+                if (!imagemPessoa) {
+                    imagemPessoa = "teste4.png"; 
+                }
+                
+                const profileDiv = document.createElement("div");
+                profileDiv.id = "profile-header";
+
+                const img = document.createElement("img");
+                img.src = imagemPessoa;
+                
+                const nameLabel = document.createElement("h2");
+                nameLabel.textContent = valor; 
+
+                profileDiv.appendChild(img);
+                profileDiv.appendChild(nameLabel);
+                
+                movieGrid.parentNode.insertBefore(profileDiv, movieGrid);
+            }
+
+            if (listaFilmes.length > 0) {
+                listaFilmes.forEach(item => {
+                    const movieCard = document.createElement("div");
+                    movieCard.classList.add("movie-card");
+
+                    // 1. Imagem
+                    const movieImage = document.createElement("img");
+                    if (item.poster && item.poster !== "None" && item.poster !== "") {
+                        movieImage.src = item.poster;
+                    } else {
+                        movieImage.src = "teste3.png"; 
+                    }
+                    movieImage.alt = item.movie_title || "Sem título";
+                    movieImage.onclick = () => irParaFilme(item.movie_title);
+
+                    // 2. Info
+                    const movieInfo = document.createElement("div");
+                    movieInfo.classList.add("movie-card-info");
+
+                    const title = document.createElement("h3");
+                    title.textContent = item.movie_title || "Título Desconhecido";
+                    title.onclick = () => irParaFilme(item.movie_title);
+                    movieInfo.appendChild(title);
+
+                    if (item.rating) {
+                        const rating = document.createElement("span"); // Usei span aqui para a nota ficar em bloco se quiser, ou mude para p
+                        rating.style.display = "block"; // Garante que a nota fique em linha separada do título
+                        rating.innerHTML = `⭐ <strong>Nota:</strong> ${Number(item.rating).toFixed(1)}/10`;
+                        rating.style.color = "#FFD700"; 
+                        movieInfo.appendChild(rating);
+                    }
+
+                    if (item.overview && item.overview !== "None") {
+                        const synopsis = document.createElement("p");
+                        synopsis.innerHTML = `<strong>Sinopse:</strong> ${item.overview}`;
+                        movieInfo.appendChild(synopsis);
+                    }
+
+                    // Diretor
+                    if (item.director && Array.isArray(item.director) && item.director.length > 0) {
+                        const director = document.createElement("p");
+                        const linksDiretores = item.director.map(nomeDir => {
+                            return `<span class="link-clicavel" onclick="window.location.href='?tipo=diretor&valor=${encodeURIComponent(nomeDir)}'">${nomeDir}</span>`;
+                        }).join(', '); // A vírgula vai ficar entre os spans
+
+                        director.innerHTML = `<strong>Diretor:</strong> ${linksDiretores}`;
+                        movieInfo.appendChild(director);
+                    }
+
+                    // Atores
+                    if (item.actors && Array.isArray(item.actors) && item.actors.length > 0) {
+                        const actors = document.createElement("p");
+                        const linksAtores = item.actors.map(nomeAtor => {
+                            return `<span class="link-clicavel" onclick="window.location.href='?tipo=ator&valor=${encodeURIComponent(nomeAtor)}'">${nomeAtor}</span>`;
+                        }).join(', '); // A vírgula vai ficar entre os spans
+
+                        actors.innerHTML = `<strong>Atores:</strong> ${linksAtores}`;
+                        movieInfo.appendChild(actors);
+                    }
+
+                    movieCard.appendChild(movieImage);
+                    movieCard.appendChild(movieInfo);
+                    movieGrid.appendChild(movieCard);
                 });
             } else {
-                html += "Nenhum resultado encontrado.";
+                movieGrid.innerHTML = "Nenhum resultado encontrado.";
             }
+
+        } catch (error) {
+            movieGrid.innerHTML = "Erro ao conectar com a API.";
+            console.error(error);
         }
-        resultadoDiv.innerHTML = html;
-
-    } catch (error) {
-        resultadoDiv.innerHTML = "Erro ao conectar com a API.";
-        console.error(error);
     }
-}
 
-buscar();
+    buscar();
 </script>
 
 </body>
