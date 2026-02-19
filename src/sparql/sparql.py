@@ -18,7 +18,6 @@ class SparQL:
     def query_by_actor(self, actor: str = "", direct: bool = False) -> dict:
         print(f"[INFO] Procurando por ator: {actor}")
 
-        # 1. Pega a foto do ator
         person_image = self.tmdb.get_person_image(actor)
 
         if direct:
@@ -41,13 +40,16 @@ class SparQL:
         movies_data = []
         for row in query_return:
             movie_title = getattr(row, 'Movies', None)
+            movie_year = getattr(row, 'launchDate', None)
             if movie_title:
-                movies_data.append(str(movie_title))
+                movies_data.append((str(movie_title), str(movie_year) if movie_year else ""))
 
-        def process_movie(title):
+        def process_movie(data):
+            title, year = data
             tmdb_data = self.tmdb.get_movie_data(title)
             return {
                 "movie_title": title,
+                "year": year,
                 "poster": tmdb_data.get("poster"),   # Pega do novo dict
                 "rating": tmdb_data.get("rating"),   # Pega a nota
                 "overview": tmdb_data.get("overview") # Pega a sinopse
@@ -65,10 +67,11 @@ class SparQL:
         print("[INFO] Procurando por filme")
 
         direct_query = (
-            "SELECT DISTINCT ?Movies (GROUP_CONCAT(DISTINCT ?actor; separator=', ') AS ?actors) (GROUP_CONCAT(DISTINCT ?director; separator=', ') AS ?directors)\n"
+            "SELECT DISTINCT ?Movies ?year (GROUP_CONCAT(DISTINCT ?actor; separator=', ') AS ?actors) (GROUP_CONCAT(DISTINCT ?director; separator=', ') AS ?directors)\n"
             "WHERE {\n"
             f'?mov rdfs:label "{movie}" .\n'
             '?mov rdfs:label ?Movies .\n'
+            '?mov foaf:launchDate ?year .\n'
             'OPTIONAL { ?act foaf:acts ?mov . ?act rdfs:label ?actor . }\n'
             'OPTIONAL { ?dir foaf:made ?mov . ?dir rdfs:label ?director . }\n'
             "}\n"
@@ -76,9 +79,10 @@ class SparQL:
         )
 
         fuzzy_query = (
-            "SELECT DISTINCT ?Movies (GROUP_CONCAT(DISTINCT ?actor; separator=', ') AS ?actors) (GROUP_CONCAT(DISTINCT ?director; separator=', ') AS ?directors)\n"
+            "SELECT DISTINCT ?Movies ?year (GROUP_CONCAT(DISTINCT ?actor; separator=', ') AS ?actors) (GROUP_CONCAT(DISTINCT ?director; separator=', ') AS ?directors)\n"
             "WHERE {\n"
             '?mov rdfs:label ?Movies .\n'
+            '?mov foaf:launchDate ?year .\n'
             f'FILTER(CONTAINS(LCASE(str(?Movies)), LCASE("{movie}")))\n'
             'OPTIONAL { ?act foaf:acts ?mov . ?act rdfs:label ?actor . }\n'
             'OPTIONAL { ?dir foaf:made ?mov . ?dir rdfs:label ?director . }\n'
@@ -99,15 +103,17 @@ class SparQL:
             directors_list = [a.strip() for a in directors_str.split(',')] if directors_str else []
 
             movie_title = str(row.Movies) if getattr(row, 'Movies', None) is not None else None
+            movie_year = str(row.year) if getattr(row, 'year', None) is not None else ""
             
             if movie_title:
-                movies_list.append((movie_title, actors_list, directors_list))
+                movies_list.append((movie_title, actors_list, directors_list, movie_year))
 
         def process_movie(data):
-            title, actors, directors = data
+            title, actors, directors, year = data
             movie_info = self.tmdb.get_movie_data(title)
             return {
                 "movie_title": title,
+                "year": year,
                 "actors": actors_list,
                 "director": directors_list,
                 "overview": movie_info.get("overview"),
@@ -135,12 +141,13 @@ class SparQL:
             )
 
         sparql_query = self.prefix + (
-            "SELECT DISTINCT ?Movies "
+            "SELECT DISTINCT ?Movies ?year"
             "(GROUP_CONCAT(DISTINCT ?actor; separator=', ') AS ?actors)\n"
             "WHERE {\n"
             f"{filter_clause}"
             "  ?dir foaf:made ?mov .\n"
             "  ?mov rdfs:label ?Movies .\n"
+            "  ?mov foaf:launchDate ?year .\n"
             "  OPTIONAL { ?act foaf:acts ?mov . ?act rdfs:label ?actor . }\n"
             "}\n"
             "GROUP BY ?Movies\n"
@@ -154,14 +161,16 @@ class SparQL:
             actors_str = str(row.actors) if getattr(row, 'actors', None) else ""
             actors_list = [a.strip() for a in actors_str.split(',')] if actors_str else []
             movie_title = str(row.Movies)
+            movie_year = str(row.year) if getattr(row, 'year', None) is not None else ""
             if movie_title:
-                movies_data.append((movie_title, actors_list))
+                movies_data.append((movie_title, actors_list, movie_year))
 
         def process_movie(data):
-            title, actors = data
+            title, actors, year = data
             tmdb_data = self.tmdb.get_movie_data(title)
             return {
                 "movie_title": title,
+                "year": year,
                 "poster": tmdb_data.get("poster"),
                 "rating": tmdb_data.get("rating"),
                 "overview": tmdb_data.get("overview"),

@@ -270,7 +270,11 @@
                     movieInfo.classList.add("movie-card-info");
 
                     const title = document.createElement("h3");
-                    title.textContent = item.movie_title || "Título Desconhecido";
+                    let titleText = item.movie_title || "Título Desconhecido";
+                    if (item.year) {
+                        titleText += ` (${item.year})`;
+                    }
+                    title.textContent = titleText;
                     title.onclick = () => irParaFilme(item.movie_title);
                     movieInfo.appendChild(title);
 

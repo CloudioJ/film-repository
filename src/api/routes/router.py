@@ -9,7 +9,6 @@ sparql = SparQL("ontologies/movies-ontology-master/ontology.rdf")
 async def actor_search(req: ActorRequest):
     print(f"Dados recebidos: {req}")
     result = sparql.query_by_actor(req.ator, req.direct)
-    result = sparql.query_by_actor(req.ator, req.direct)
     return { "result": result }
 
 @router.post("/movie_search")
