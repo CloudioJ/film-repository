@@ -23,7 +23,7 @@
   .container {
     width: 90%;
     max-width: 700px;
-    margin: 50px auto; 
+    margin: 80px auto; 
     padding: 20px;
     box-sizing: border-box;
     background-color: rgba(0,0,0,0.3);
@@ -155,9 +155,63 @@
     text-align: left;
     color: white;
   }
+
+  /* Barra de pesquisa superior */
+  .top-search-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 70px;
+    background-color: rgba(0, 0, 0, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    z-index: 1000;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  }
+
+  .top-search-bar select, 
+  .top-search-bar input, 
+  .top-search-bar button {
+    height: 40px;
+    border-radius: 5px;
+    border: 1px solid #444;
+    padding: 0 15px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+  }
+
+  .top-search-bar input {
+    width: 300px;
+  }
+
+  .top-search-bar button {
+    background-color: #f6121d;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.3s;
+  }
+
+  .top-search-bar button:hover {
+    background-color: #d00000;
+  }
 </style>
 </head>
 <body>
+
+  <div class="top-search-bar">
+      <select id="novoTipoBusca">
+          <option value="filme">Filme</option>
+          <option value="ator">Ator</option>
+          <option value="diretor">Diretor</option>
+      </select>
+      <input type="text" id="novaConsulta" placeholder="Nova pesquisa..." />
+      <button onclick="novaPesquisa()">Pesquisar</button>
+  </div>
 
   <div class="container">
         <div class="search-info">
@@ -180,6 +234,22 @@
 
     tipoBusca.textContent = tipo;
     valorBusca.textContent = valor;
+
+    // Preenche a barra superior com o tipo atual
+    if(tipo) document.getElementById("novoTipoBusca").value = tipo;
+
+    // Permite pesquisar com Enter
+    document.getElementById("novaConsulta").addEventListener("keypress", function(event) {
+        if (event.key === "Enter") novaPesquisa();
+    });
+
+    function novaPesquisa() {
+        const nTipo = document.getElementById("novoTipoBusca").value;
+        const nValor = document.getElementById("novaConsulta").value.trim();
+        if (nValor) {
+            window.location.href = `?tipo=${encodeURIComponent(nTipo)}&valor=${encodeURIComponent(nValor)}`;
+        }
+    }
 
     function irParaFilme(titulo) {
         if (titulo) {
@@ -242,7 +312,7 @@
                 img.src = imagemPessoa;
                 
                 const nameLabel = document.createElement("h2");
-                nameLabel.textContent = valor; 
+                nameLabel.textContent = data.result.person_name; 
 
                 profileDiv.appendChild(img);
                 profileDiv.appendChild(nameLabel);

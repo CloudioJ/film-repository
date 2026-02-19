@@ -18,31 +18,36 @@ class SparQL:
     def query_by_actor(self, actor: str = "", direct: bool = False) -> dict:
         print(f"[INFO] Procurando por ator: {actor}")
 
-        person_image = self.tmdb.get_person_image(actor)
-
         if direct:
-            filter_clause = f'?actor rdfs:label "{actor}" .\n'
+            filter_clause = f'?actor rdfs:label ?actorName . FILTER(STR(?actorName) = "{actor}")\n'
         else:
             filter_clause = f'?actor rdfs:label ?actorName . FILTER(CONTAINS(LCASE(STR(?actorName)), LCASE("{actor}")))\n'
 
         sparql_query = self.prefix + (
-            "SELECT DISTINCT ?Movies ?launchDate\n"
+            "SELECT DISTINCT ?actorName ?Movies ?launchDate\n"
             "WHERE {\n"
             f"{filter_clause}"
             "  ?actor foaf:acts ?mov .\n"
             "  ?mov rdfs:label ?Movies .\n"
             "  ?mov foaf:launchDate ?launchDate .\n"
             "}\n"
-            "GROUP BY ?Movies ?launchDate"
+            "GROUP BY ?Movies ?launchDate ?actorName"
         )
+
         query_return = self.g.query(sparql_query)
-        
         movies_data = []
+        actor_name = None
+
         for row in query_return:
+            if not actor_name:
+                actor_name = getattr(row, 'actorName', None)
+                print(f"[INFO] Retorno do nome do ator: {actor_name}")
             movie_title = getattr(row, 'Movies', None)
             movie_year = getattr(row, 'launchDate', None)
             if movie_title:
                 movies_data.append((str(movie_title), str(movie_year) if movie_year else ""))
+
+        person_image = self.tmdb.get_person_image(actor_name)
 
         def process_movie(data):
             title, year = data
@@ -50,9 +55,9 @@ class SparQL:
             return {
                 "movie_title": title,
                 "year": year,
-                "poster": tmdb_data.get("poster"),   # Pega do novo dict
-                "rating": tmdb_data.get("rating"),   # Pega a nota
-                "overview": tmdb_data.get("overview") # Pega a sinopse
+                "poster": tmdb_data.get("poster"), 
+                "rating": tmdb_data.get("rating"),
+                "overview": tmdb_data.get("overview") 
             }
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -60,6 +65,7 @@ class SparQL:
 
         return {
             "person_image": person_image,
+            "person_name": actor_name,
             "movies": movie_list
         }
 
@@ -129,11 +135,8 @@ class SparQL:
     def query_by_director(self, director: str = "", direct: bool = False) -> dict:
         print(f"[INFO] Procurando por filmes do diretor: {director}")
 
-        # 1. Pega foto do diretor
-        person_image = self.tmdb.get_person_image(director)
-
         if direct:
-            filter_clause = f'?dir rdfs:label "{director}" .\n'
+            filter_clause = f'?dir rdfs:label ?dirName . FILTER(STR(?dirName) = "{director}")\n'
         else:
             filter_clause = (
                 "  ?dir rdfs:label ?dirName .\n"
@@ -141,7 +144,7 @@ class SparQL:
             )
 
         sparql_query = self.prefix + (
-            "SELECT DISTINCT ?Movies ?year"
+            "SELECT DISTINCT ?dirName ?Movies ?year "
             "(GROUP_CONCAT(DISTINCT ?actor; separator=', ') AS ?actors)\n"
             "WHERE {\n"
             f"{filter_clause}"
@@ -150,14 +153,17 @@ class SparQL:
             "  ?mov foaf:launchDate ?year .\n"
             "  OPTIONAL { ?act foaf:acts ?mov . ?act rdfs:label ?actor . }\n"
             "}\n"
-            "GROUP BY ?Movies\n"
+            "GROUP BY ?Movies ?dirName ?year\n"
         )
 
         query_return = self.g.query(sparql_query)
         
         movies_data = []
+        dir_name = None
 
         for row in query_return:
+            if not dir_name:
+                dir_name = getattr(row, 'dirName', None)
             actors_str = str(row.actors) if getattr(row, 'actors', None) else ""
             actors_list = [a.strip() for a in actors_str.split(',')] if actors_str else []
             movie_title = str(row.Movies)
@@ -165,6 +171,7 @@ class SparQL:
             if movie_title:
                 movies_data.append((movie_title, actors_list, movie_year))
 
+        person_image = self.tmdb.get_person_image(dir_name)
         def process_movie(data):
             title, actors, year = data
             tmdb_data = self.tmdb.get_movie_data(title)
@@ -182,5 +189,6 @@ class SparQL:
 
         return {
             "person_image": person_image,
+            "person_name": dir_name,
             "movies": movie_list
         }
