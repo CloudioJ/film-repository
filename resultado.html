@@ -173,6 +173,7 @@
     const params = new URLSearchParams(window.location.search);
     const tipo = params.get("tipo");
     const valor = params.get("valor");
+    const exact = params.get("exact") === "true";
     const tipoBusca = document.getElementById("tipoBusca");
     const valorBusca = document.getElementById("valorBusca");
     const movieGrid = document.getElementById("movieGrid");
@@ -182,7 +183,7 @@
 
     function irParaFilme(titulo) {
         if (titulo) {
-            window.location.href = `?tipo=filme&valor=${encodeURIComponent(titulo)}`;
+            window.location.href = `?tipo=filme&valor=${encodeURIComponent(titulo)}&exact=true`;
         }
     }
 
@@ -196,13 +197,13 @@
 
         if (tipo === "ator") {
             url = "http://127.0.0.1:8000/actor_search";
-            bodyData = { ator: valor };
+            bodyData = { ator: valor, direct: exact };
         } else if (tipo === "filme") {
             url = "http://127.0.0.1:8000/movie_search";
-            bodyData = { titulo: valor };
+            bodyData = { titulo: valor, direct: exact };
         } else if (tipo === "diretor") {
             url = "http://127.0.0.1:8000/director_search";
-            bodyData = { diretor: valor };
+            bodyData = { diretor: valor, direct: exact };
         } else {
             alert("Tipo de busca não suportado.");
             return;
@@ -291,7 +292,7 @@
                     if (item.director && Array.isArray(item.director) && item.director.length > 0) {
                         const director = document.createElement("p");
                         const linksDiretores = item.director.map(nomeDir => {
-                            return `<span class="link-clicavel" onclick="window.location.href='?tipo=diretor&valor=${encodeURIComponent(nomeDir)}'">${nomeDir}</span>`;
+                            return `<span class="link-clicavel" onclick="window.location.href='?tipo=diretor&valor=${encodeURIComponent(nomeDir)}&exact=true'">${nomeDir}</span>`;
                         }).join(', '); // A vírgula vai ficar entre os spans
 
                         director.innerHTML = `<strong>Diretor:</strong> ${linksDiretores}`;
@@ -302,7 +303,7 @@
                     if (item.actors && Array.isArray(item.actors) && item.actors.length > 0) {
                         const actors = document.createElement("p");
                         const linksAtores = item.actors.map(nomeAtor => {
-                            return `<span class="link-clicavel" onclick="window.location.href='?tipo=ator&valor=${encodeURIComponent(nomeAtor)}'">${nomeAtor}</span>`;
+                            return `<span class="link-clicavel" onclick="window.location.href='?tipo=ator&valor=${encodeURIComponent(nomeAtor)}&exact=true'">${nomeAtor}</span>`;
                         }).join(', '); // A vírgula vai ficar entre os spans
 
                         actors.innerHTML = `<strong>Atores:</strong> ${linksAtores}`;
